@@ -28,6 +28,7 @@ export default function ({column, columnIndex, row, rowIndex}: any) {
 
   return (
     <TableCell
+      className={`cell-${columnIndex}-${rowIndex}`}
       ref={cellRef}
       height={36}
       padding={'none'}

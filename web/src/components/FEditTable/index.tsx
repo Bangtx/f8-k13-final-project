@@ -1,7 +1,7 @@
 import './style.sass'
-import {Table, TableBody, TableCell, TableHead, TableRow, TextField} from "@mui/material";
+import {Table, TableBody, TableCell, TableHead, TableRow} from "@mui/material";
 import Row from './Row.tsx'
-import {useState, createContext, useEffect} from "react";
+import {useState, createContext, useRef} from "react";
 import CellCursor from "./CellCursor.tsx";
 import CellInput from "./CellInput.tsx";
 
@@ -20,91 +20,85 @@ const defaultCur = {
 export default function ({columns, rows}: any) {
 
   const [cursor, setCursor] = useState({...defaultCur})
-  console.log('render')
+  const table = useRef(null)
+  const cellInputComponent = useRef(null)
   const onKeyDown = (event: KeyboardEvent) => {
-    console.log('vao day', cursor)
     // Only trigger editing if a cell is selected (has dimensions) and not already editing
     if (cursor.width > 0 && cursor.height > 0 && !cursor.editing) {
       // Ignore special keys like Ctrl, Alt, Shift, etc.
-      console.log('bao day', !event.ctrlKey &&
-        !event.altKey &&
-        !event.metaKey)
-      if (
-        !event.ctrlKey &&
-        !event.altKey &&
-        !event.metaKey &&
-        event.key.length === 1 // Only single character keys
-      ) {
+      if (!event.ctrlKey && !event.altKey && !event.metaKey && event.key.length === 1) { // Only single character keys
         setCursor({
           ...cursor,
           editing: true,
-          // initialValue: event.key, // Store the initial key pressed
         })
+
+        onFocus()
+        if (cellInputComponent.current) {
+          // @ts-ignore
+          cellInputComponent.current.onInput(event.key)
+        }
         event.preventDefault()
       } else if (event.key === "Enter") {
         // Enter key also triggers editing
         setCursor({
           ...cursor,
           editing: true,
-          // initialValue: "", // Empty string for Enter key
         })
+
+        onFocus()
         event.preventDefault()
       }
     }
   }
 
-  const provider = {
-    cursor, setCursor, onKeyDown
+  const onFocus = () => {
+    const inputRef = document.querySelector('.cell-input input')
+    // @ts-ignore
+    inputRef.focus()
   }
 
-  // Add global keydown event listener
-  useEffect(() => {
-    console.log('init')
-    window.addEventListener("keydown", (event) => onKeyDown(event))
-    return () => {
-      window.removeEventListener("keydown", (event) => onKeyDown(event))
-    }
-  }, [cursor])
-
-  useEffect(() => {
-    console.log('cursor', cursor)
-  }, [cursor])
+  const provider = {
+    cursor, setCursor, onKeyDown, columns, rows, table
+  }
 
   return (
-    <TableContext.Provider value={provider}>
-      <Table className={'f-editable-table'}>
-        <TableHead>
-          <TableRow>
-            <TableCell width={32} padding={'none'}></TableCell>
+    // @ts-ignore
+    <div ref={table} className={'f-editable-table-wrap'} tabIndex={0} onKeyDown={onKeyDown} style={{border: 'none'}}>
+      <TableContext.Provider value={provider}>
+        <Table className={'f-editable-table'}>
+          <TableHead>
+            <TableRow>
+              <TableCell width={32} padding={'none'}></TableCell>
+              {
+                columns.map((column: any) => {
+                  return (
+                    <TableCell
+                      padding={'none'}
+                      align={"left"}
+                      size={"small"}
+                      key={column.name}
+                    >
+                      {column.name}
+                    </TableCell>
+                  )
+                })
+              }
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
             {
-              columns.map((column: any) => {
-                return (
-                  <TableCell
-                    padding={'none'}
-                    align={"left"}
-                    size={"small"}
-                    key={column.name}
-                  >
-                    {column.name}
-                  </TableCell>
-                )
+              rows?.map((row: any, index: number) => {
+                // @ts-ignore
+                return <Row key={`row-${index}`} columns={columns} row={row} rowIndex={index}/>
               })
             }
-          </TableRow>
-        </TableHead>
 
-        <TableBody>
-          {
-            rows?.map((row: any, index: number) => {
-              // @ts-ignore
-              return <Row columns={columns} row={row} rowIndex={index}/>
-            })
-          }
-
-        </TableBody>
-      </Table>
-      <CellCursor/>
-      <CellInput/>
-    </TableContext.Provider>
+          </TableBody>
+        </Table>
+        <CellCursor/>
+        <CellInput ref={cellInputComponent}/>
+      </TableContext.Provider>
+    </div>
   )
 }

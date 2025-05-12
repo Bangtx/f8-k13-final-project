@@ -9,7 +9,7 @@ export default function ({columns, row, rowIndex}: any) {
       <TableCell padding={'none'} size={"small"}>{rowIndex}</TableCell>
       {
         columns.map((column: any, index: number) => {
-          return <Cell column={column} row={row} columnIndex={index} rowIndex={rowIndex}/>
+          return <Cell key={`column-${index}`} column={column} row={row} columnIndex={index} rowIndex={rowIndex}/>
         })
       }
     </TableRow>
