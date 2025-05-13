@@ -244,14 +244,13 @@ const rows = [
 
 
 export default function () {
+  console.log(useParams())
+  const location = useLocation()
+
+  console.log(location)
   return (
     <>
-      <h1>Test</h1>
-
-      <FEditTable
-        columns={columns}
-        rows={rows}
-      />
+      <FEditableTable columns={columns} rows={rows}/>
     </>
   )
 }
