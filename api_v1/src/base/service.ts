@@ -58,12 +58,19 @@ export abstract class BaseService {
   }
 
   async updateMany(data: any[]) {
-    console.log(data)
     const result = await this.repository.upsert(data, ['id'])
-    console.log('result', result)
+    return result
   }
 
   softDelete(id: number) {
-    return this.updateOne(id, {active: false})
+    this.repository
+      .createQueryBuilder()
+      .update()
+      .set({active: false})
+      .where("id = :id", { id })
+      .returning(this.columns.join(', '))
+      .execute()
+
+    return {"msg": "deleted successfully"}
   }
 }
