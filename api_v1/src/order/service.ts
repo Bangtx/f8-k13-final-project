@@ -3,9 +3,9 @@ import {DataSource, Repository} from 'typeorm';
 import { OrderEntity } from './entity';
 import { BaseService } from "../base/service";
 import { EmployeeEntity } from "../employee/entity";
-import { CreateOrderDto } from "./dto";
+import {CreateOrderDto, UpdateOrderDto} from "./dto";
 import { OrderDetailService } from "../orderDetail/service";
-import { CreateOrderDetailDto } from "../orderDetail/dto";
+import {CreateOrderDetailDto, UpdateOrderDetailDto} from "../orderDetail/dto";
 import { toCamelCase } from "../utils";
 import {OrderDetailEntity} from "../orderDetail/entity";
 
@@ -141,5 +141,22 @@ export class OrderService extends BaseService {
 
     order.details = orderDetails
     return order
+  }
+
+  async updateOne(id: number, orderDto: UpdateOrderDto) {
+    const details = orderDto.details
+    // @ts-ignore
+    delete orderDto.details;
+
+    const order = super.updateOne(id, orderDto)
+
+    details.forEach((detail) => {
+      // @ts-ignore
+      detail.orderId = order.id
+    })
+    // console.log(details)
+    await this.orderDetailService.updateMany(details)
+
+    return this.getOne(id)
   }
 }

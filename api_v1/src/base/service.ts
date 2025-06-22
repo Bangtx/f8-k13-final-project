@@ -42,18 +42,25 @@ export abstract class BaseService {
   }
 
   async updateOne(id: number, data: any) {
-    const newData = await this.repository
+    const query = this.repository
       .createQueryBuilder()
       .update()
       .set(data)
       .where("id = :id", { id })
       .returning(this.columns.join(', '))
-      .execute()
+
+    const newData = await query.execute()
     if (newData.affected === 0) {
       throw new NotFoundException(`Color with id ${id} not found`);
     }
 
     return toCamelCase(newData.raw[0])
+  }
+
+  async updateMany(data: any[]) {
+    console.log(data)
+    const result = await this.repository.upsert(data, ['id'])
+    console.log('result', result)
   }
 
   softDelete(id: number) {
